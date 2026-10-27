@@ -758,6 +758,34 @@ RSpec.describe JsonApiKit::Resource do
     end
   end
 
+  describe "#resource_for" do
+    subject(:instance) { topic_resource.new(guardian:, edition:) }
+
+    let(:edition) { JsonApiKit::Edition.new([]) }
+    let(:related_resource) { instance.resource_for(user_resource) }
+
+    it "builds the requested resource in the request context", :aggregate_failures do
+      expect(related_resource).to be_a(user_resource)
+      expect(related_resource).to have_attributes(guardian:, edition:)
+    end
+
+    it "reuses the requested resource" do
+      expect(instance.resource_for(user_resource)).to equal(related_resource)
+    end
+
+    it "reuses the owner through related resources" do
+      expect(related_resource.resource_for(topic_resource)).to equal(instance)
+    end
+
+    context "when another request builds its resources" do
+      let(:other_instance) { topic_resource.new(guardian:, edition:) }
+
+      it "creates an independent resource" do
+        expect(other_instance.resource_for(user_resource)).not_to equal(related_resource)
+      end
+    end
+  end
+
   describe "#writable_attributes" do
     subject(:resource) { topic_resource.new(guardian:) }
 
