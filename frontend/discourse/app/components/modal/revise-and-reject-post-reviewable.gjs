@@ -3,8 +3,10 @@ import { tracked } from "@glimmer/tracking";
 import { Input } from "@ember/component";
 import { fn } from "@ember/helper";
 import { action } from "@ember/object";
+import didUpdate from "@ember/render-modifiers/modifiers/did-update";
 import { service } from "@ember/service";
 import { isEmpty } from "@ember/utils";
+import DsaModerationDetails from "discourse/components/dsa-moderation-details";
 import ReviewableQueuedPost from "discourse/components/reviewable/queued-post";
 import { popupAjaxError } from "discourse/lib/ajax-error";
 import ComboBox from "discourse/select-kit/components/combo-box";
@@ -22,6 +24,7 @@ export default class ReviseAndRejectPostReviewable extends Component {
   @tracked customReason;
   @tracked feedback;
   @tracked submitting = false;
+  @tracked classificationStep = false;
 
   get configuredReasons() {
     const reasons = this.siteSettings.reviewable_revision_reasons
@@ -50,15 +53,38 @@ export default class ReviseAndRejectPostReviewable extends Component {
   }
 
   @action
-  async rejectAndSendPM() {
+  continueToClassification() {
+    this.classificationStep = true;
+  }
+
+  @action
+  backToAction() {
+    this.classificationStep = false;
+  }
+
+  @action
+  focusCurrentStep(element) {
+    element.querySelector('[aria-current="step"]').focus();
+  }
+
+  @action
+  async rejectAndSendPM(classification) {
     this.submitting = true;
 
     try {
-      await this.args.model.performConfirmed(this.args.model.action, {
+      const data = {
         revise_reason: this.reason,
         revise_custom_reason: this.customReason,
         revise_feedback: this.feedback,
-      });
+      };
+      if (this.args.model.classificationOptions) {
+        await this.args.model.perform({
+          ...data,
+          dsa_classification: classification,
+        });
+      } else {
+        await this.args.model.performConfirmed(this.args.model.action, data);
+      }
       this.args.closeModal();
     } catch (error) {
       popupAjaxError(error);
@@ -74,65 +100,119 @@ export default class ReviseAndRejectPostReviewable extends Component {
       @title={{i18n "review.revise_and_reject_post.title"}}
     >
       <:body>
-        <div class="revise-and-reject-reviewable__queued-post">
-          <ReviewableQueuedPost @reviewable={{@model.reviewable}} />
-        </div>
+        {{#if @model.classificationOptions}}
+          <ol
+            aria-label={{i18n "review.moderation_steps.label"}}
+            class="dsa-moderation-steps"
+            {{didUpdate this.focusCurrentStep this.classificationStep}}
+          >
+            <li
+              aria-current={{unless this.classificationStep "step"}}
+              class={{if this.classificationStep "" "--current"}}
+              tabindex="-1"
+            >{{i18n "review.moderation_steps.action"}}</li>
+            <li
+              aria-current={{if this.classificationStep "step"}}
+              class={{if this.classificationStep "--current"}}
+              tabindex="-1"
+            >{{i18n "dsa_statements.title"}}</li>
+          </ol>
+        {{/if}}
+        <div hidden={{this.classificationStep}}>
+          <div class="revise-and-reject-reviewable__queued-post">
+            <ReviewableQueuedPost @reviewable={{@model.reviewable}} />
+          </div>
 
-        <div class="control-group">
-          <label class="control-label" for="reason">{{i18n
-              "review.revise_and_reject_post.reason"
-            }}</label>
-          <ComboBox
-            class="revise-and-reject-reviewable__reason"
-            @content={{this.configuredReasons}}
-            @name="reason"
-            @onChange={{fn (mut this.reason)}}
-            @value={{this.reason}}
-          />
-        </div>
-
-        {{#if this.showCustomReason}}
           <div class="control-group">
-            <label class="control-label" for="custom_reason">{{i18n
-                "review.revise_and_reject_post.custom_reason"
+            <label class="control-label" for="reason">{{i18n
+                "review.revise_and_reject_post.reason"
               }}</label>
-            <Input
-              class="revise-and-reject-reviewable__custom-reason"
-              name="custom_reason"
-              @type="text"
-              @value={{this.customReason}}
+            <ComboBox
+              class="revise-and-reject-reviewable__reason"
+              @content={{this.configuredReasons}}
+              @name="reason"
+              @onChange={{fn (mut this.reason)}}
+              @value={{this.reason}}
+            />
+          </div>
+
+          {{#if this.showCustomReason}}
+            <div class="control-group">
+              <label class="control-label" for="custom_reason">{{i18n
+                  "review.revise_and_reject_post.custom_reason"
+                }}</label>
+              <Input
+                class="revise-and-reject-reviewable__custom-reason"
+                name="custom_reason"
+                @type="text"
+                @value={{this.customReason}}
+              />
+            </div>
+          {{/if}}
+
+          <div class="control-group">
+            <label class="control-label" for="feedback">{{i18n
+                "review.revise_and_reject_post.feedback"
+              }}
+              <span class="revise-and-reject-reviewable__optional">({{i18n
+                  "review.revise_and_reject_post.optional"
+                }})</span>
+            </label>
+            <DTextarea
+              class="revise-and-reject-reviewable__feedback"
+              @name="feedback"
+              @onChange={{fn (mut this.feedback)}}
+              @value={{this.feedback}}
+            />
+          </div>
+        </div>
+        {{#if @model.classificationOptions}}
+          <div hidden={{not this.classificationStep}}>
+            <DsaModerationDetails
+              @formId="revision-dsa-classification"
+              @onSubmit={{this.rejectAndSendPM}}
+              @options={{@model.classificationOptions}}
             />
           </div>
         {{/if}}
-
-        <div class="control-group">
-          <label class="control-label" for="feedback">{{i18n
-              "review.revise_and_reject_post.feedback"
-            }}
-            <span class="revise-and-reject-reviewable__optional">({{i18n
-                "review.revise_and_reject_post.optional"
-              }})</span>
-          </label>
-          <DTextarea
-            class="revise-and-reject-reviewable__feedback"
-            @name="feedback"
-            @onChange={{fn (mut this.feedback)}}
-            @value={{this.feedback}}
-          />
-        </div>
       </:body>
       <:footer>
-        <DButton
-          class="btn-primary"
-          @action={{this.rejectAndSendPM}}
-          @disabled={{this.sendPMDisabled}}
-          @label="review.revise_and_reject_post.send_pm"
-        />
-        <DButton
-          class="btn-flat d-modal-cancel"
-          @action={{@closeModal}}
-          @label="cancel"
-        />
+        {{#if @model.classificationOptions}}
+          {{#if this.classificationStep}}
+            <DButton
+              class="btn-primary"
+              type="submit"
+              @disabled={{this.submitting}}
+              @form="revision-dsa-classification"
+              @label="review.revise_and_reject_post.send_pm"
+            />
+            <DButton
+              class="btn-flat"
+              @action={{this.backToAction}}
+              @disabled={{this.submitting}}
+              @label="back_button"
+            />
+          {{else}}
+            <DButton
+              class="btn-primary"
+              @action={{this.continueToClassification}}
+              @disabled={{this.sendPMDisabled}}
+              @label="continue"
+            />
+          {{/if}}
+        {{else}}
+          <DButton
+            class="btn-primary"
+            @action={{this.rejectAndSendPM}}
+            @disabled={{this.sendPMDisabled}}
+            @label="review.revise_and_reject_post.send_pm"
+          />
+          <DButton
+            class="btn-flat d-modal-cancel"
+            @action={{@closeModal}}
+            @label="cancel"
+          />
+        {{/if}}
       </:footer>
     </DModal>
   </template>

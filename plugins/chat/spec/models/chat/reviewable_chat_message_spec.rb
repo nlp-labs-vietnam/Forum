@@ -29,6 +29,21 @@ RSpec.describe Chat::ReviewableMessage, type: :model do
     expect(notification.url).to eq("/review/#{reviewable.id}")
   end
 
+  describe "#actions_for" do
+    it "requires classification for restrictive chat actions" do
+      reviewable.update!(target_created_by: user)
+
+      actions = reviewable.actions_for(moderator.guardian).to_a
+
+      expect(actions.select(&:dsa_classification_required).map(&:server_action)).to contain_exactly(
+        "agree_and_delete",
+        "delete_and_agree",
+        "agree_and_suspend",
+        "agree_and_silence",
+      )
+    end
+  end
+
   describe "#perform" do
     it "suspends the author and deletes the flagged message" do
       reviewable.update!(target_created_by: user)

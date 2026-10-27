@@ -172,6 +172,10 @@ module PageObjects
         page.has_css?(".timeline-event__description", text: content, normalize_ws: true)
       end
 
+      def has_no_note?(content)
+        page.has_no_css?(".timeline-event__description", text: content, normalize_ws: true)
+      end
+
       def has_claimed_history_item?(user)
         page.has_css?(".timeline-event__icon .d-icon-user-plus") && page.has_text?("Claimed by")
       end
