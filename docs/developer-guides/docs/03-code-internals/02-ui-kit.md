@@ -239,3 +239,24 @@ A section should be designed, with multiple examples that each isolate one capab
 - [Drag, resize, and gesture primitives](30-drag-and-gesture-primitives.md) for the modifiers that handle input.
 - [Types](27-types.md) for the Glint and TypeScript conventions the kit follows.
 - [Private modules](32-private-modules.md) for where `-internals` code goes.
+
+### Multi-select footer actions
+
+`DMultiSelect` accepts an optional `footer` block below the search results, including when
+there are no matching results. The block receives the menu API; await `menu.close()` before
+opening another dialog so focus moves to the new dialog. Without a footer block, no footer
+or divider is rendered.
+
+```hbs
+<DMultiSelect
+  @loadFn={{this.loadItems}}
+  @selection={{this.selection}}
+  @onChange={{this.selectItems}}
+>
+  <:selection as |item|>{{item.name}}</:selection>
+  <:result as |item|>{{item.name}}</:result>
+  <:footer as |menu|>
+    <DButton @action={{fn this.createItem menu}} @label="create" @icon="plus" />
+  </:footer>
+</DMultiSelect>
+```

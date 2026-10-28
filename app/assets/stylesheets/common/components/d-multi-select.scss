@@ -160,3 +160,20 @@
     }
   }
 }
+
+.d-multi-select__content.--with-footer {
+  .d-multi-select__search-results {
+    height: auto;
+    max-height: min(18rem, 40dvh);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+
+    > .d-multi-select__result {
+      flex-shrink: 0;
+    }
+  }
+}
+
+.d-multi-select__footer {
+  background: var(--secondary);
+}
