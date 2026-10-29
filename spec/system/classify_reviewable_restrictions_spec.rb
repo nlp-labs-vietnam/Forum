@@ -29,7 +29,8 @@ RSpec.describe "Classifying restrictive reviewable actions" do
     review_page.visit_reviewable(reviewable)
     review_page.select_bundled_action(reviewable, "post-delete_user_block", bundle_index: 1)
 
-    expect(modal).to have_action_title("Delete and block @#{user.username}")
+    expect(modal).to have_action_title("Delete and block user")
+    expect(modal).to have_content("@#{user.username}")
     expect(modal).to have_no_confirmation_prompt
     expect(modal).to have_classification
 

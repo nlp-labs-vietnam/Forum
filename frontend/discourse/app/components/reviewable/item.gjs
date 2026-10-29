@@ -845,7 +845,7 @@ export default class ReviewableItem extends Component {
         postEdit: reviewable.raw ?? reviewable.payload?.raw,
         reviewableId: reviewable.id,
         dsaClassification,
-        dsaAction: performableAction?.server_action,
+        actionLabel: performableAction?.label,
         perform: performAction,
       }
     );

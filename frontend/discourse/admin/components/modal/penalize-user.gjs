@@ -43,41 +43,15 @@ export default class PenalizeUser extends Component {
   }
 
   get modalTitle() {
-    if (this.args.model.dsaClassification) {
-      if (
-        ["reject_and_suspend", "reject_and_silence"].includes(
-          this.args.model.dsaAction
-        )
-      ) {
-        return `review.moderation_action.${this.args.model.dsaAction}`;
-      }
-      return this.args.model.penaltyType === "suspend"
-        ? "review.moderation_action.suspend"
-        : "review.moderation_action.silence";
-    }
-    if (this.args.model.penaltyType === "suspend") {
-      return "admin.user.suspend_modal_title";
-    } else if (this.args.model.penaltyType === "silence") {
-      return "admin.user.silence_modal_title";
-    }
+    return this.args.model.dsaClassification
+      ? this.args.model.actionLabel
+      : i18n(`admin.user.${this.args.model.penaltyType}_modal_title`);
   }
 
   get buttonLabel() {
-    if (this.args.model.dsaClassification) {
-      if (!this.args.model.postId) {
-        return ["reject_and_suspend", "reject_and_silence"].includes(
-          this.args.model.dsaAction
-        )
-          ? `review.moderation_action.${this.args.model.dsaAction}_button`
-          : `admin.user.${this.args.model.penaltyType}`;
-      }
-      return `admin.user.penalty_actions.${this.args.model.penaltyType}_${this.postAction}`;
-    }
-    if (this.args.model.penaltyType === "suspend") {
-      return "admin.user.suspend";
-    } else if (this.args.model.penaltyType === "silence") {
-      return "admin.user.silence";
-    }
+    return this.args.model.dsaClassification
+      ? this.args.model.actionLabel
+      : i18n(`admin.user.${this.args.model.penaltyType}`);
   }
 
   get penaltyHistory() {
@@ -219,11 +193,12 @@ export default class PenalizeUser extends Component {
       @closeModal={{@closeModal}}
       @dismissable={{not this.penalizing}}
       @flash={{this.flash}}
-      @title={{i18n this.modalTitle username=@model.user.username}}
+      @title={{this.modalTitle}}
     >
       <:body>
         {{#if this.canPenalize}}
           {{#if @model.dsaClassification}}
+            <p>{{i18n "review.user_label"}} @{{@model.user.username}}</p>
             <ol
               aria-label={{i18n "review.moderation_steps.label"}}
               class="dsa-moderation-steps"
@@ -336,7 +311,7 @@ export default class PenalizeUser extends Component {
             }}
             @icon="ban"
             @isLoading={{this.penalizing}}
-            @label={{this.buttonLabel}}
+            @translatedLabel={{this.buttonLabel}}
           />
           {{#if @model.dsaClassification}}
             <DButton

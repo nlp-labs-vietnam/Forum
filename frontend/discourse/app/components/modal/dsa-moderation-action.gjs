@@ -25,19 +25,6 @@ export default class DsaModerationAction extends Component {
     return this.args.model.action.client_action === "edit";
   }
 
-  get title() {
-    if (!this.args.model.username) {
-      return this.args.model.action.label;
-    }
-
-    return i18n(
-      this.args.model.action.server_action === "delete_user_block"
-        ? "review.moderation_action.delete_user_block"
-        : "review.moderation_action.delete_user",
-      { username: this.args.model.username }
-    );
-  }
-
   @action
   async submit(classification) {
     if (this.saving) {
@@ -62,9 +49,12 @@ export default class DsaModerationAction extends Component {
       @closeModal={{@closeModal}}
       @dismissable={{not this.saving}}
       @flash={{this.flash}}
-      @title={{this.title}}
+      @title={{@model.action.label}}
     >
       <:body>
+        {{#if @model.username}}
+          <p>{{i18n "review.user_label"}} @{{@model.username}}</p>
+        {{/if}}
         <h2 class="dsa-moderation-action__heading">{{i18n
             "dsa_statements.title"
           }}</h2>
