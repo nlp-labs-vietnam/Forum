@@ -193,7 +193,10 @@ export default class PenalizeUser extends Component {
       @closeModal={{@closeModal}}
       @dismissable={{not this.penalizing}}
       @flash={{this.flash}}
-      @subtitle={{if @model.dsaClassification (concat "@" @model.user.username)}}
+      @subtitle={{if
+        @model.dsaClassification
+        (concat "@" @model.user.username)
+      }}
       @title={{this.modalTitle}}
     >
       <:body>
