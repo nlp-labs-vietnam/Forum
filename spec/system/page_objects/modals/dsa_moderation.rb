@@ -46,8 +46,8 @@ module PageObjects
         has_css?("#{full_modal_selector} .dsa-moderation-details")
       end
 
-      def has_no_confirmation_prompt?
-        within(full_modal_selector) { has_no_text?("Are you sure") }
+      def has_confirmation_prompt?(message)
+        within(full_modal_selector) { has_text?(message) }
       end
 
       def has_selected_category?(category)

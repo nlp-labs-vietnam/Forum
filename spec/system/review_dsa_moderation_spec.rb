@@ -48,6 +48,7 @@ describe "Classifying reviewable moderation" do
     expect(modal).to be_closed
     expect(review_page).to have_reviewable_with_approved_status(reviewable)
     expect(review_page).to have_note(note)
+    expect(review_page).to have_help_resources
 
     page.refresh
 

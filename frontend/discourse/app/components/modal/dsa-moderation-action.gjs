@@ -52,6 +52,9 @@ export default class DsaModerationAction extends Component {
       @title={{@model.action.label}}
     >
       <:body>
+        {{#if @model.action.confirm_message}}
+          <p>{{@model.action.confirm_message}}</p>
+        {{/if}}
         <h2 class="dsa-moderation-action__heading">{{i18n
             "dsa_statements.title"
           }}</h2>

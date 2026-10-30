@@ -969,7 +969,10 @@ export default class ReviewableItem extends Component {
         <div
           class={{dConcatClass
             "review-item__aside"
-            (if @reviewable.dsa_classification "--dsa-classification")
+            (if
+              @reviewable.dsa_classification.statement_ids.length
+              "--dsa-classification"
+            )
           }}
         >
 
@@ -1070,7 +1073,7 @@ export default class ReviewableItem extends Component {
                 @reviewable={{reviewable}}
               />
             {{/each}}
-          {{else if (and @showHelp (not @reviewable.dsa_classification))}}
+          {{else if @showHelp}}
             <ReviewableHelpResources />
           {{/if}}
         </div>

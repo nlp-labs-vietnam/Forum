@@ -62,6 +62,10 @@ module PageObjects
         end
       end
 
+      def has_help_resources?
+        has_css?(".review-item__resources", text: I18n.t("js.review.need_help"))
+      end
+
       def has_reviewable_items?(count:)
         page.has_css?(".review-item", count: count)
       end
