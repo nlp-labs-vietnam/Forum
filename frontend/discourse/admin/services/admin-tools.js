@@ -117,7 +117,6 @@ export default class AdminToolsService extends Service {
         postEdit: opts.postEdit,
         reviewableId: opts.reviewableId,
         dsaClassification: opts.dsaClassification,
-        actionLabel: opts.actionLabel,
         user: loadedUser,
         before: opts.before,
         perform: opts.perform,

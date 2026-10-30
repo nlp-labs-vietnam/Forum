@@ -1,7 +1,7 @@
 /* eslint-disable ember/no-tracked-properties-from-args */
 import Component from "@glimmer/component";
 import { tracked } from "@glimmer/tracking";
-import { concat, fn } from "@ember/helper";
+import { fn } from "@ember/helper";
 import { action } from "@ember/object";
 import didUpdate from "@ember/render-modifiers/modifiers/did-update";
 import { service } from "@ember/service";
@@ -43,15 +43,19 @@ export default class PenalizeUser extends Component {
   }
 
   get modalTitle() {
-    return this.args.model.dsaClassification
-      ? this.args.model.actionLabel
-      : i18n(`admin.user.${this.args.model.penaltyType}_modal_title`);
+    if (this.args.model.penaltyType === "suspend") {
+      return "admin.user.suspend_modal_title";
+    } else if (this.args.model.penaltyType === "silence") {
+      return "admin.user.silence_modal_title";
+    }
   }
 
   get buttonLabel() {
-    return this.args.model.dsaClassification
-      ? this.args.model.actionLabel
-      : i18n(`admin.user.${this.args.model.penaltyType}`);
+    if (this.args.model.penaltyType === "suspend") {
+      return "admin.user.suspend";
+    } else if (this.args.model.penaltyType === "silence") {
+      return "admin.user.silence";
+    }
   }
 
   get penaltyHistory() {
@@ -193,11 +197,7 @@ export default class PenalizeUser extends Component {
       @closeModal={{@closeModal}}
       @dismissable={{not this.penalizing}}
       @flash={{this.flash}}
-      @subtitle={{if
-        @model.dsaClassification
-        (concat "@" @model.user.username)
-      }}
-      @title={{this.modalTitle}}
+      @title={{i18n this.modalTitle}}
     >
       <:body>
         {{#if this.canPenalize}}
@@ -314,7 +314,7 @@ export default class PenalizeUser extends Component {
             }}
             @icon="ban"
             @isLoading={{this.penalizing}}
-            @translatedLabel={{this.buttonLabel}}
+            @label={{this.buttonLabel}}
           />
           {{#if @model.dsaClassification}}
             <DButton

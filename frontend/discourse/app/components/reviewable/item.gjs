@@ -346,33 +346,21 @@ export default class ReviewableItem extends Component {
     }
   }
 
-  clientSuspend(
-    reviewable,
-    performAction,
-    dsaClassification,
-    performableAction
-  ) {
+  clientSuspend(reviewable, performAction, dsaClassification) {
     return this._penalize(
       "showSuspendModal",
       reviewable,
       performAction,
-      dsaClassification,
-      performableAction
+      dsaClassification
     );
   }
 
-  clientSilence(
-    reviewable,
-    performAction,
-    dsaClassification,
-    performableAction
-  ) {
+  clientSilence(reviewable, performAction, dsaClassification) {
     return this._penalize(
       "showSilenceModal",
       reviewable,
       performAction,
-      dsaClassification,
-      performableAction
+      dsaClassification
     );
   }
 
@@ -723,12 +711,6 @@ export default class ReviewableItem extends Component {
           model: {
             action: performableAction,
             options: classificationOptions,
-            username: ["delete_user", "delete_user_block"].includes(
-              performableAction.server_action
-            )
-              ? (reviewable.target_created_by ?? reviewable.target_user)
-                  ?.username
-              : undefined,
             perform: (classificationData) =>
               performableAction.client_action === "edit"
                 ? this.clientEdit(
@@ -827,13 +809,7 @@ export default class ReviewableItem extends Component {
     }
   }
 
-  _penalize(
-    adminToolMethod,
-    reviewable,
-    performAction,
-    dsaClassification,
-    performableAction
-  ) {
+  _penalize(adminToolMethod, reviewable, performAction, dsaClassification) {
     if (!this.adminTools) {
       return;
     }
@@ -845,7 +821,6 @@ export default class ReviewableItem extends Component {
         postEdit: reviewable.raw ?? reviewable.payload?.raw,
         reviewableId: reviewable.id,
         dsaClassification,
-        actionLabel: performableAction?.label,
         perform: performAction,
       }
     );

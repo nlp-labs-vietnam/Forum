@@ -20,7 +20,7 @@ RSpec.describe "Classifying restrictive reviewable actions" do
     sign_in(admin)
   end
 
-  it "lets staff classify deletion of the account named in the modal" do
+  it "lets staff classify account deletion" do
     user = Fabricate(:user)
     flagger = Fabricate(:user, trust_level: TrustLevel[3])
     post = Fabricate(:post, topic:, user:)
@@ -30,7 +30,6 @@ RSpec.describe "Classifying restrictive reviewable actions" do
     review_page.select_bundled_action(reviewable, "post-delete_user_block", bundle_index: 1)
 
     expect(modal).to have_action_title("Delete and block user")
-    expect(modal).to have_content("@#{user.username}")
     expect(modal).to have_no_confirmation_prompt
     expect(modal).to have_classification
 

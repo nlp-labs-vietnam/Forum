@@ -1,6 +1,5 @@
 import Component from "@glimmer/component";
 import { tracked } from "@glimmer/tracking";
-import { concat } from "@ember/helper";
 import { action } from "@ember/object";
 import DsaModerationDetails from "discourse/components/dsa-moderation-details";
 import { extractError } from "discourse/lib/ajax-error";
@@ -50,7 +49,6 @@ export default class DsaModerationAction extends Component {
       @closeModal={{@closeModal}}
       @dismissable={{not this.saving}}
       @flash={{this.flash}}
-      @subtitle={{if @model.username (concat "@" @model.username)}}
       @title={{@model.action.label}}
     >
       <:body>

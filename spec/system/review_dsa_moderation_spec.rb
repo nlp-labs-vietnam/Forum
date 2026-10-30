@@ -63,8 +63,7 @@ describe "Classifying reviewable moderation" do
     review_page.visit_reviewable(reviewable)
     review_page.select_bundled_action(reviewable, "post-agree_and_suspend", bundle_index: 1)
 
-    expect(modal).to have_action_title("Suspend user")
-    expect(modal).to have_content("@#{post.user.username}")
+    expect(modal).to have_action_title("Suspend User")
     expect(modal).to have_no_cancel_button
 
     penalty_modal.set_future_date("two_weeks")
@@ -74,7 +73,7 @@ describe "Classifying reviewable moderation" do
     penalty_modal.fill_in_suspend_reason("Repeated personal attacks.")
     modal.continue
 
-    expect(modal).to have_action_title("Suspend user")
+    expect(modal).to have_action_title("Suspend User")
     expect(modal).to have_classification
     expect(modal).to have_focused_step("DSA classification")
     expect(modal).to have_no_cancel_button
@@ -93,14 +92,14 @@ describe "Classifying reviewable moderation" do
     modal.back
 
     expect(modal).to have_focused_step("Action details")
-    expect(modal).to have_action_title("Suspend user")
+    expect(modal).to have_action_title("Suspend User")
     expect(penalty_modal).to have_suspend_reason("Repeated personal attacks.")
 
     modal.continue
 
     expect(modal).to have_selected_category(category)
 
-    modal.confirm("Suspend user")
+    modal.confirm("Suspend")
 
     expect(modal).to be_closed
     expect(review_page).to have_reviewable_with_approved_status(reviewable)
