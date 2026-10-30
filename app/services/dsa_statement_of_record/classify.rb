@@ -6,7 +6,7 @@ class DsaStatementOfRecord::Classify
   policy :staff
   policy :classification_enabled
 
-  params base_class: DsaStatementOfRecord::Classification do
+  params base_class: DsaStatementOfRecord::ClassificationContract do
     attribute :reviewable_id, :integer
     attribute :statement_ids, :array
 

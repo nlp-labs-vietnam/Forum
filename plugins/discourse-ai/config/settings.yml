@@ -101,7 +101,7 @@ discourse_ai:
         - decision_model
     depends_behavior: "hidden"
   ai_sentiment_backfill_maximum_posts_per_hour:
-    default: 2500
+    default: 240
     min: 0
     max: 10000
     area: "ai-features/sentiment"
@@ -600,6 +600,12 @@ discourse_ai:
   ai_ask_ai_search_max_age_days:
     default: 0
     min: 0
+    area: "ai-features/search"
+  ai_ask_ai_endorsed_reply_groups:
+    type: group_list
+    list_type: compact
+    default: "3" # 3: @staff
+    allow_any: false
     area: "ai-features/search"
   ai_ask_ai_external_sources:
     type: list

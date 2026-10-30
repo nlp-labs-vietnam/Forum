@@ -353,7 +353,7 @@ class ReviewablesController < ApplicationController
     end
 
     classification =
-      DsaStatementOfRecord::Classification.new(
+      DsaStatementOfRecord::ClassificationContract.new(
         **params.require(:dsa_classification).permit(:community_rule, :category).to_h,
       )
     rule = classification.rule
