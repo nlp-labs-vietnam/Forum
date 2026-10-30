@@ -1,7 +1,7 @@
 /* eslint-disable ember/no-tracked-properties-from-args */
 import Component from "@glimmer/component";
 import { tracked } from "@glimmer/tracking";
-import { fn } from "@ember/helper";
+import { concat, fn } from "@ember/helper";
 import { action } from "@ember/object";
 import didUpdate from "@ember/render-modifiers/modifiers/did-update";
 import { service } from "@ember/service";
@@ -193,12 +193,12 @@ export default class PenalizeUser extends Component {
       @closeModal={{@closeModal}}
       @dismissable={{not this.penalizing}}
       @flash={{this.flash}}
+      @subtitle={{if @model.dsaClassification (concat "@" @model.user.username)}}
       @title={{this.modalTitle}}
     >
       <:body>
         {{#if this.canPenalize}}
           {{#if @model.dsaClassification}}
-            <p>{{i18n "review.user_label"}} @{{@model.user.username}}</p>
             <ol
               aria-label={{i18n "review.moderation_steps.label"}}
               class="dsa-moderation-steps"

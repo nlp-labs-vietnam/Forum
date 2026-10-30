@@ -39,7 +39,7 @@ module PageObjects
       end
 
       def has_action_title?(title)
-        has_css?("#{full_modal_selector} .d-modal__title", text: title, exact_text: true)
+        has_css?("#{full_modal_selector} .d-modal__title-text", text: title, exact_text: true)
       end
 
       def has_classification?
