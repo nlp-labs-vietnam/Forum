@@ -28,6 +28,7 @@ describe "Classifying reviewable moderation" do
     review_page.select_bundled_action(reviewable, "post-agree_and_hide", bundle_index: 1)
 
     expect(modal).to have_action_title("Hide post")
+    expect(modal).to have_single_classification_step
     expect(modal).to have_classification
     expect(modal).to have_no_cancel_button
 

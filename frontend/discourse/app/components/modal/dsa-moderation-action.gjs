@@ -55,9 +55,14 @@ export default class DsaModerationAction extends Component {
         {{#if @model.action.confirm_message}}
           <p>{{@model.action.confirm_message}}</p>
         {{/if}}
-        <h2 class="dsa-moderation-action__heading">{{i18n
-            "dsa_statements.title"
-          }}</h2>
+        <ol
+          aria-label={{i18n "review.moderation_steps.label"}}
+          class="dsa-moderation-steps"
+        >
+          <li aria-current="step" class="--current">{{i18n
+              "dsa_statements.title"
+            }}</li>
+        </ol>
         <DsaModerationDetails
           @formId="dsa-moderation-action-form"
           @onSubmit={{this.submit}}

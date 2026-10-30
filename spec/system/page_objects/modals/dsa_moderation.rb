@@ -46,6 +46,14 @@ module PageObjects
         has_css?("#{full_modal_selector} .d-modal__title-text", text: title, exact_text: true)
       end
 
+      def has_single_classification_step?
+        has_css?(
+          "#{full_modal_selector} .dsa-moderation-steps li:only-child[aria-current='step']",
+          text: I18n.t("js.dsa_statements.title"),
+          count: 1,
+        )
+      end
+
       def has_classification?
         has_css?("#{full_modal_selector} .dsa-moderation-details")
       end
