@@ -1,9 +1,8 @@
 import Component from "@glimmer/component";
 import { tracked } from "@glimmer/tracking";
 import { action } from "@ember/object";
-import DsaModerationDetails from "discourse/components/dsa-moderation-details";
+import DsaModeration from "discourse/components/dsa-moderation";
 import { extractError } from "discourse/lib/ajax-error";
-import DButton from "discourse/ui-kit/d-button";
 import DModal from "discourse/ui-kit/d-modal";
 import { i18n } from "discourse-i18n";
 
@@ -12,28 +11,28 @@ export default class DsaModerationAction extends Component {
   @tracked saving = false;
 
   get buttonClass() {
-    return this.editing ? "btn-primary" : "btn-danger";
+    return this.#editing ? "btn-primary" : "btn-danger";
   }
 
   get buttonLabel() {
-    return this.editing
+    return this.#editing
       ? i18n("review.continue_to_editor")
       : this.args.model.action.label;
   }
 
-  get editing() {
+  get #editing() {
     return this.args.model.action.client_action === "edit";
   }
 
   @action
-  async submit(classification) {
+  async submit(data) {
     if (this.saving) {
       return;
     }
     this.saving = true;
     this.flash = null;
     try {
-      await this.args.model.perform({ dsa_classification: classification });
+      await this.args.model.perform(data);
       this.args.closeModal();
     } catch (error) {
       this.flash = extractError(error);
@@ -43,50 +42,37 @@ export default class DsaModerationAction extends Component {
   }
 
   <template>
-    <DModal
-      class="dsa-moderation-action"
-      ...attributes
-      @closeModal={{@closeModal}}
-      @dismissable={{not this.saving}}
-      @flash={{this.flash}}
-      @title={{@model.action.label}}
+    <DsaModeration
+      @hasActionDetails={{false}}
+      @onSubmit={{this.submit}}
+      @options={{@model.options}}
+      as |flow|
     >
-      <:body>
-        {{#if @model.action.confirm_message}}
-          <p>{{@model.action.confirm_message}}</p>
-        {{/if}}
-        <ol
-          aria-label={{i18n "review.moderation_steps.label"}}
-          class="dsa-moderation-steps"
-        >
-          <li aria-current="step" class="--current">{{i18n
-              "dsa_statements.title"
-            }}</li>
-        </ol>
-        <DsaModerationDetails
-          @formId="dsa-moderation-action-form"
-          @onSubmit={{this.submit}}
-          @options={{@model.options}}
-        />
-      </:body>
-      <:footer>
-        <DButton
-          class={{this.buttonClass}}
-          type="submit"
-          @disabled={{this.saving}}
-          @form="dsa-moderation-action-form"
-          @isLoading={{this.saving}}
-          @translatedLabel={{this.buttonLabel}}
-        />
-        {{#if @model.action.confirm_message}}
-          <DButton
-            class="btn-flat d-modal-cancel"
-            @action={{@closeModal}}
+      <DModal
+        class="dsa-moderation-action"
+        ...attributes
+        @closeModal={{@closeModal}}
+        @dismissable={{not this.saving}}
+        @flash={{this.flash}}
+        @title={{@model.action.label}}
+      >
+        <:body>
+          {{#if @model.action.confirm_message}}
+            <p>{{@model.action.confirm_message}}</p>
+          {{/if}}
+          <flow.Body />
+        </:body>
+        <:footer>
+          <flow.Footer
+            @cancel={{if @model.action.confirm_message @closeModal}}
+            @cancelDisabled={{this.saving}}
             @disabled={{this.saving}}
-            @label="cancel"
+            @isLoading={{this.saving}}
+            @submitClass={{this.buttonClass}}
+            @submitLabel={{this.buttonLabel}}
           />
-        {{/if}}
-      </:footer>
-    </DModal>
+        </:footer>
+      </DModal>
+    </DsaModeration>
   </template>
 }

@@ -94,6 +94,30 @@ RSpec.describe Chat::ReviewableMessage, type: :model do
         }.not_to change(DsaStatementOfRecord, :count)
       end
 
+      it "classifies the statement while deleting the flagged message" do
+        result =
+          reviewable.perform(
+            moderator,
+            :agree_and_delete,
+            dsa_classification: {
+              community_rule: {
+                "ground" => "Be respectful",
+                "explanation" => "Personal attacks are not allowed.",
+              },
+              category: "STATEMENT_CATEGORY_OTHER_VIOLATION_TC",
+            },
+          )
+
+        expect(result).to be_success
+        expect(chat_message.reload.deleted_at).to be_present
+        expect(reviewable.reload).to be_approved
+
+        statement = reviewable.dsa_statement_of_records.sole
+        expect(statement).to be_ready
+        expect(statement.classified_by_id).to eq(moderator.id)
+        expect(statement.payload).to include("incompatible_content_ground" => "Be respectful")
+      end
+
       it "records a statement when agree_and_delete handles the chat message reviewable" do
         expect { reviewable.perform(moderator, :agree_and_delete) }.to change(
           DsaStatementOfRecord,

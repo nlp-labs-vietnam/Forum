@@ -457,25 +457,12 @@ class Reviewable < ActiveRecord::Base
           )
 
         if attributes
-          statement =
-            DsaStatementOfRecord.create!(
-              reviewable_id: id,
-              payload:
-                attributes.merge(
-                  application_date: Date.current.iso8601,
-                  territorial_scope: DsaStatementOfRecord::TERRITORIAL_SCOPE,
-                  source_type: "SOURCE_VOLUNTARY",
-                  decision_ground: "DECISION_GROUND_INCOMPATIBLE_CONTENT",
-                ),
-            )
-
-          if args[:dsa_classification]
-            statement.classify!(**args[:dsa_classification], classified_by: performed_by)
-
-            if Reviewable.exists?(id)
-              reviewable_notes.create!(user: performed_by, content: statement.classification_note)
-            end
-          end
+          DsaStatementOfRecord.record!(
+            reviewable: self,
+            attributes:,
+            performed_by:,
+            classification: args[:dsa_classification],
+          )
         end
       end
     end

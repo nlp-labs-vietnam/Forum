@@ -10,7 +10,6 @@ import { classify, dasherize } from "@ember/string";
 import ScrubRejectedUserModal from "discourse/admin/components/modal/scrub-rejected-user";
 import DsaStatementClassification from "discourse/components/dsa-statement-classification";
 import DsaClassificationModal from "discourse/components/modal/dsa-classification";
-import DsaModerationAction from "discourse/components/modal/dsa-moderation-action";
 import RejectReasonReviewableModal from "discourse/components/modal/reject-reason-reviewable";
 import ReviseAndRejectPostReviewable from "discourse/components/modal/revise-and-reject-post-reviewable";
 import ReviewableFlagReason from "discourse/components/reviewable/flag-reason";
@@ -111,6 +110,7 @@ export default class ReviewableItem extends Component {
   @service store;
   @service toasts;
   @service messageBus;
+  @service reviewableDsa;
   @optionalService adminTools;
 
   @tracked disabled = false;
@@ -236,13 +236,6 @@ export default class ReviewableItem extends Component {
     return this.siteSettings?.reviewable_claiming !== "required";
   }
 
-  get dsaClassificationOptions() {
-    const { classificationOptions } = this.args;
-    if (classificationOptions?.community_rules?.length) {
-      return classificationOptions;
-    }
-  }
-
   get primaryBundles() {
     return (this.args.reviewable?.bundled_actions ?? []).filter(
       (bundle) => !bundle.secondary
@@ -364,7 +357,7 @@ export default class ReviewableItem extends Component {
     );
   }
 
-  async clientEdit(reviewable, performAction, classification) {
+  async clientEdit(reviewable, performAction) {
     if (!this.currentUser) {
       return this.dialog.alert(i18n("post.controls.edit_anonymous"));
     }
@@ -385,10 +378,9 @@ export default class ReviewableItem extends Component {
       draftSequence: topic.draft_sequence,
       skipJumpOnSave: true,
       onSaved: (result) =>
-        performAction({
-          post_version: result.payload.version,
-          ...(classification ? { dsa_classification: classification } : {}),
-        }).catch(popupAjaxError),
+        performAction({ post_version: result.payload.version }).catch(
+          popupAjaxError
+        ),
     });
   }
 
@@ -447,11 +439,19 @@ export default class ReviewableItem extends Component {
       : actionModalClassMap[performableAction.server_action];
 
     if (
-      this.dsaClassificationOptions &&
-      performableAction.dsa_classification_required &&
-      (!actionModalClass || actionModalClass === ReviseAndRejectPostReviewable)
+      this.reviewableDsa.handlesConfirmation({
+        action: performableAction,
+        options: this.args.classificationOptions,
+        modalClass: actionModalClass,
+      })
     ) {
-      return this._performConfirmed(performableAction);
+      return this._performConfirmed(
+        performableAction,
+        {},
+        {
+          modalClass: actionModalClass,
+        }
+      );
     }
 
     if (message) {
@@ -656,7 +656,11 @@ export default class ReviewableItem extends Component {
   }
 
   @bind
-  async _performConfirmed(performableAction, additionalData = {}) {
+  async _performConfirmed(
+    performableAction,
+    additionalData = {},
+    { modalClass } = {}
+  ) {
     let reviewable = this.args.reviewable;
 
     let performAction = async (actionData = {}) => {
@@ -699,81 +703,49 @@ export default class ReviewableItem extends Component {
         });
     };
 
-    try {
-      const classificationOptions =
-        performableAction.dsa_classification_required
-          ? this.dsaClassificationOptions
-          : undefined;
-      let classificationPromise;
+    const classificationOptions = this.reviewableDsa.optionsFor({
+      action: performableAction,
+      options: this.args.classificationOptions,
+    });
 
-      const classifyAndPerform = (data = {}) => {
-        classificationPromise = this.modal.show(DsaModerationAction, {
-          model: {
-            action: performableAction,
-            options: classificationOptions,
-            perform: (classificationData) =>
-              performableAction.client_action === "edit"
-                ? this.clientEdit(
-                    reviewable,
-                    performAction,
-                    classificationData.dsa_classification
-                  )
-                : performAction({ ...data, ...classificationData }),
-          },
-        });
-        return classificationPromise;
-      };
+    const dispatch = async (perform) => {
+      if (!performableAction.client_action) {
+        return perform();
+      }
 
-      if (
-        classificationOptions &&
-        performableAction.server_action === "revise_and_reject_post"
-      ) {
+      const actionMethod =
+        this[`client${classify(performableAction.client_action)}`];
+      if (actionMethod) {
         if (await this.#claimReviewable()) {
-          await this.modal.show(ReviseAndRejectPostReviewable, {
-            model: {
-              reviewable,
-              classificationOptions,
-              perform: performAction,
-            },
-          });
-        }
-      } else if (
-        classificationOptions &&
-        (!performableAction.client_action ||
-          performableAction.client_action === "edit")
-      ) {
-        if (await this.#claimReviewable()) {
-          await classifyAndPerform();
-        }
-      } else if (performableAction.client_action) {
-        let actionMethod =
-          this[`client${classify(performableAction.client_action)}`];
-        if (actionMethod) {
-          if (await this.#claimReviewable()) {
-            await actionMethod.call(
-              this,
-              reviewable,
-              classificationOptions &&
-                !["suspend", "silence"].includes(
-                  performableAction.client_action
-                )
-                ? classifyAndPerform
-                : performAction,
-              classificationOptions,
-              performableAction
-            );
-          }
-        } else {
-          // eslint-disable-next-line no-console
-          console.error(
-            `No handler for ${performableAction.client_action} found`
+          return actionMethod.call(
+            this,
+            reviewable,
+            perform,
+            classificationOptions
           );
         }
       } else {
-        await performAction();
+        // eslint-disable-next-line no-console
+        console.error(
+          `No handler for ${performableAction.client_action} found`
+        );
       }
+    };
 
-      await classificationPromise;
+    try {
+      if (classificationOptions) {
+        await this.reviewableDsa.perform({
+          action: performableAction,
+          reviewable,
+          options: classificationOptions,
+          modalClass,
+          claim: () => this.#claimReviewable(),
+          dispatch,
+          performAction,
+        });
+      } else {
+        await dispatch(performAction);
+      }
     } catch (error) {
       popupAjaxError(error);
     }

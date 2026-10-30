@@ -1909,15 +1909,16 @@ RSpec.describe ReviewablesController do
         expect(reviewable.reviewable_notes.sole.content).to include(rule[:ground])
       end
 
-      it "rejects missing rule input before moderation" do
-        put "/review/#{reviewable.id}/perform/agree_and_hide.json",
+      it "rejects an unknown rule before moderation" do
+        put "/review/#{reviewable.id}/perform/delete_and_agree.json",
             params: {
               version: reviewable.version,
-              dsa_classification: classification.merge(community_rule: ""),
+              dsa_classification: classification.merge(community_rule: "unknown-rule"),
             }
 
         expect(response).to have_http_status(:bad_request)
         expect(reviewable.reload).to be_pending
+        expect(flagged_post.reload).not_to be_trashed
         expect(reviewable.dsa_statement_of_records).to be_empty
       end
 

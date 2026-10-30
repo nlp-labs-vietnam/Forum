@@ -44,6 +44,7 @@ export default class DsaClassificationModal extends Component {
           @onCancel={{@closeModal}}
           @onSavingChange={{this.savingChanged}}
           @reviewable={{@model.reviewable}}
+          @showCancel={{true}}
         />
       </:body>
     </DModal>

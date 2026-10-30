@@ -352,18 +352,15 @@ class ReviewablesController < ApplicationController
       raise Discourse::InvalidParameters.new(:dsa_classification)
     end
 
-    classification = params.require(:dsa_classification).permit(:community_rule, :category)
+    classification =
+      DsaStatementOfRecord::Classification.new(
+        **params.require(:dsa_classification).permit(:community_rule, :category).to_h,
+      )
+    rule = classification.rule
 
-    rule =
-      DsaStatementOfRecord.community_rules.find do |entry|
-        entry["id"] == classification[:community_rule]
-      end
+    raise Discourse::InvalidParameters.new(:dsa_classification) if !classification.valid? || !rule
 
-    if !rule || DsaStatementOfRecord::CATEGORIES.exclude?(classification[:category])
-      raise Discourse::InvalidParameters.new(:dsa_classification)
-    end
-
-    { community_rule: rule, category: classification[:category] }
+    { community_rule: rule, category: classification.category }
   end
 
   def find_reviewable
