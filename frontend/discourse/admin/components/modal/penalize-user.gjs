@@ -325,7 +325,7 @@ export default class PenalizeUser extends Component {
             />
           {{/if}}
         {{/if}}
-        {{#unless @model.dsaClassification}}
+        {{#unless this.classificationStep}}
           <DButton
             class="btn-flat d-modal-cancel"
             @action={{this.cancelPenalty}}

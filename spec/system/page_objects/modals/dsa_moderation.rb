@@ -30,6 +30,10 @@ module PageObjects
         within(full_modal_selector) { click_button("Back", exact: true) }
       end
 
+      def has_cancel_button?
+        within(full_modal_selector) { has_button?("Cancel", exact: true) }
+      end
+
       def has_no_cancel_button?
         within(full_modal_selector) { has_no_button?("Cancel", exact: true) }
       end

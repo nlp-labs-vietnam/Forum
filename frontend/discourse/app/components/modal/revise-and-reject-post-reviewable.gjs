@@ -207,12 +207,14 @@ export default class ReviseAndRejectPostReviewable extends Component {
             @disabled={{this.sendPMDisabled}}
             @label="review.revise_and_reject_post.send_pm"
           />
+        {{/if}}
+        {{#unless this.classificationStep}}
           <DButton
             class="btn-flat d-modal-cancel"
             @action={{@closeModal}}
             @label="cancel"
           />
-        {{/if}}
+        {{/unless}}
       </:footer>
     </DModal>
   </template>

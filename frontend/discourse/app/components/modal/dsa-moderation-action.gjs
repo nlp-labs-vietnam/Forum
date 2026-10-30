@@ -73,6 +73,14 @@ export default class DsaModerationAction extends Component {
           @isLoading={{this.saving}}
           @translatedLabel={{this.buttonLabel}}
         />
+        {{#if @model.action.confirm_message}}
+          <DButton
+            class="btn-flat d-modal-cancel"
+            @action={{@closeModal}}
+            @disabled={{this.saving}}
+            @label="cancel"
+          />
+        {{/if}}
       </:footer>
     </DModal>
   </template>

@@ -34,7 +34,14 @@ RSpec.describe "Classifying restrictive reviewable actions" do
       I18n.t("reviewables.actions.reject_user.block.confirm", username: user.username),
     )
     expect(modal).to have_classification
+    expect(modal).to have_cancel_button
 
+    modal.cancel
+
+    expect(modal).to be_closed
+    expect(review_page).to have_reviewable_with_pending_status(reviewable)
+
+    review_page.select_bundled_action(reviewable, "post-delete_user_block", bundle_index: 1)
     modal.select_rule(rule[:ground])
     modal.select_category(category)
     modal.confirm("Delete and block user")
@@ -121,7 +128,7 @@ RSpec.describe "Classifying restrictive reviewable actions" do
     revision.fill_reason(reason)
     revision.fill_feedback(feedback)
 
-    expect(modal).to have_no_cancel_button
+    expect(modal).to have_cancel_button
 
     modal.continue
 

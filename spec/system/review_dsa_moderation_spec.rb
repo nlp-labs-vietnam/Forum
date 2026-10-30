@@ -65,7 +65,7 @@ describe "Classifying reviewable moderation" do
     review_page.select_bundled_action(reviewable, "post-agree_and_suspend", bundle_index: 1)
 
     expect(modal).to have_action_title("Suspend User")
-    expect(modal).to have_no_cancel_button
+    expect(modal).to have_cancel_button
 
     penalty_modal.set_future_date("two_weeks")
 
